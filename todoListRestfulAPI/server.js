@@ -1,5 +1,13 @@
 const http = require('http')
 const port = 8080
+const {v4: uuidv4} = require('uuid')
+const todos = [
+    {
+        "title": "Title 1",
+        "ids": uuidv4()
+    }
+]
+
 const requestListener = (req, res) =>{
     const resHeaders = {
         "Access-Control-Allow-Headers": 'Content-Type, Authorization, Content-Length, X-Requested-With',
@@ -29,6 +37,34 @@ const requestListener = (req, res) =>{
                     data: {
                         status: 'success',
                         message: 'Delete successfully'
+                    }
+                })
+                break
+            default:
+                resContentGenerator({
+                    res,
+                    statusCode: 200,
+                    resHeaders,
+                    data: {
+                        status: 'success',
+                        message: 'Nothing happened'
+                    }
+                })
+                break
+        }
+        return;
+    }
+
+    if(req.url === "/todos"){
+        switch (req.method) {
+            case 'GET':
+                resContentGenerator({
+                    res,
+                    statusCode: 200,
+                    resHeaders,
+                    data: {
+                        status: 'success',
+                        data: todos
                     }
                 })
                 break
