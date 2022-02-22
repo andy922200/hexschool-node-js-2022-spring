@@ -9,6 +9,7 @@ const todos = [
 ]
 
 const requestListener = (req, res) =>{
+    const { method: reqMethod } = req
     const resHeaders = {
         "Access-Control-Allow-Headers": 'Content-Type, Authorization, Content-Length, X-Requested-With',
         "Access-Control-Allow-Origin": '*',
@@ -16,16 +17,24 @@ const requestListener = (req, res) =>{
         "content-type": "application/json"
     }
 
+    /* get chunk data for JSON parse */
+    let body = ""
+    req.on('data',chunk=>{
+        body+=chunk
+    })
+
     if(req.url === "/"){
-        switch (req.method){
+        switch (reqMethod){
             case 'GET':
                 resContentGenerator({
                     res,
                     statusCode: 200,
                     resHeaders,
-                    data: {
-                        status: 'success',
-                        message: 'Get your Index page'
+                    callback: () => {
+                        res.write(JSON.stringify({
+                            status: 'success',
+                            message: 'Get your Index page'
+                        }))
                     }
                 })
                 break
@@ -34,9 +43,11 @@ const requestListener = (req, res) =>{
                     res,
                     statusCode: 200,
                     resHeaders,
-                    data: {
-                        status: 'success',
-                        message: 'Delete successfully'
+                    callback: () => {
+                        res.write(JSON.stringify({
+                            status: 'success',
+                            message: 'Delete successfully'
+                        }))
                     }
                 })
                 break
@@ -45,9 +56,11 @@ const requestListener = (req, res) =>{
                     res,
                     statusCode: 200,
                     resHeaders,
-                    data: {
-                        status: 'success',
-                        message: 'Nothing happened'
+                    callback: () => {
+                        res.write(JSON.stringify({
+                            status: 'success',
+                            message: 'Nothing happened'
+                        }))
                     }
                 })
                 break
@@ -56,16 +69,45 @@ const requestListener = (req, res) =>{
     }
 
     if(req.url === "/todos"){
-        switch (req.method) {
+        switch (reqMethod) {
             case 'GET':
                 resContentGenerator({
                     res,
                     statusCode: 200,
                     resHeaders,
-                    data: {
-                        status: 'success',
-                        data: todos
+                    callback: () => {
+                        res.write(JSON.stringify({
+                            status: 'success',
+                            data: todos
+                        }))
                     }
+                })
+                break
+            case 'OPTIONS':
+                resContentGenerator({
+                    res,
+                    statusCode: 200,
+                    resHeaders
+                })
+                break
+            case 'POST':
+                req.on('end', (s)=>{
+                    const content = JSON.parse(body)
+                    resContentGenerator({
+                        res,
+                        statusCode: 200,
+                        resHeaders,
+                        callback: () => {
+                            todos.push({
+                                "title": content.title,
+                                "ids": uuidv4()
+                            })
+                            res.write(JSON.stringify({
+                                status: 'success',
+                                message: 'Add Successfully'
+                            }))
+                        }
+                    })
                 })
                 break
             default:
@@ -73,9 +115,11 @@ const requestListener = (req, res) =>{
                     res,
                     statusCode: 200,
                     resHeaders,
-                    data: {
-                        status: 'success',
-                        message: 'Nothing happened'
+                    callback: () => {
+                        res.write(JSON.stringify({
+                            status: 'success',
+                            message: 'Nothing happened'
+                        }))
                     }
                 })
                 break
@@ -87,15 +131,19 @@ const requestListener = (req, res) =>{
         res,
         statusCode: 404,
         resHeaders,
-        data: {
-            status: false,
-            message: 'invalid route'
+        callback: ()=>{
+            res.write(JSON.stringify({
+                status: false,
+                message: 'invalid route'
+            }))
         }
     })
 }
-const resContentGenerator = ({ res, statusCode, resHeaders, data})=>{
+const resContentGenerator = ({ res, statusCode, resHeaders, callback })=>{
     res.writeHead(statusCode, resHeaders)
-    res.write(data ? JSON.stringify(data) : JSON.stringify({status: false, message: 'No Value'}))
+    if (callback){
+        callback()
+    }
     res.end()
 }
 
