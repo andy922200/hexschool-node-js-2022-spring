@@ -1,6 +1,5 @@
 const { resContentGenerator } = require('./tools')
 const http = require('http')
-const port = 8080
 const {v4: uuidv4} = require('uuid')
 let todos = [
     {
@@ -217,4 +216,4 @@ const errorHandling = function ({ res, resHeaders }){
     })
 }
 
-httpServer.listen(process.env.PORT || port ? port : 8080)
+httpServer.listen(process.env.PORT || 8080)
