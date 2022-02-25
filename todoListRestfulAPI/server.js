@@ -217,4 +217,4 @@ const errorHandling = function ({ res, resHeaders }){
     })
 }
 
-httpServer.listen(port ? port : 8080)
+httpServer.listen(process.env.PORT || port ? port : 8080)
